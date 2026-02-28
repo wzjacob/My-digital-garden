@@ -1,0 +1,72 @@
+@import "highlight.js/styles/github-dark.min.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0, 0%, 98%;
+    --foreground: 240, 10%, 3.9%;
+    --muted: 240, 4.8%, 95.9%;
+    --muted-foreground: 240, 3.8%, 46.1%;
+    --accent: 240, 4.8%, 95.9%;
+    --border: 240, 5.9%, 90%;
+    --ring: 240, 5.9%, 10%;
+    --card: 0, 0%, 100%;
+    --card-foreground: 240, 10%, 3.9%;
+  }
+
+  .dark {
+    --background: 240, 10%, 3.9%;
+    --foreground: 0, 0%, 98%;
+    --muted: 240, 3.7%, 15.9%;
+    --muted-foreground: 240, 5%, 64.9%;
+    --accent: 240, 3.7%, 15.9%;
+    --border: 240, 3.7%, 15.9%;
+    --ring: 240, 4.9%, 83.9%;
+    --card: 240, 3.7%, 15.9%;
+    --card-foreground: 0, 0%, 98%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    line-height: 1.6;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 中文长文排版 */
+  .prose-cn {
+    @apply max-w-3xl;
+    line-height: 1.75;
+    color: hsl(var(--foreground));
+  }
+
+  .prose-cn p {
+    line-height: 1.75;
+  }
+
+  .prose-cn a {
+    @apply text-foreground underline underline-offset-2 hover:text-muted-foreground;
+  }
+}
+
+/* 代码高亮 */
+pre {
+  @apply overflow-x-auto rounded-lg p-4 my-4;
+}
+
+code {
+  @apply text-sm;
+}
+
+:not(pre) > code {
+  @apply rounded bg-muted px-1.5 py-0.5;
+}
