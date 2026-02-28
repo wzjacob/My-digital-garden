@@ -69,6 +69,8 @@ draft: false        # true 时构建排除
 
 > **中文/特殊字符文件名**：建议添加 `slug: 英文短名`，否则 URL 可能出现 404。
 
+> **表格**：因 next-mdx-remote 6 与 remark-gfm 兼容性问题，暂不支持 GFM 表格语法，可用列表或 HTML 表格替代。
+
 ## 环境变量
 
 - `NEXT_PUBLIC_SITE_URL`: 站点 URL，用于 sitemap/robots（默认 https://example.com）
