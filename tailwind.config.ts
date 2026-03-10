@@ -23,7 +23,14 @@ const config: Config = {
         secondary: "hsl(var(--muted))",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: [
+          "var(--font-sans)",
+          "PingFang SC",
+          "Microsoft YaHei",
+          "Hiragino Sans GB",
+          "system-ui",
+          "sans-serif",
+        ],
         serif: ["var(--font-serif)", "serif"],
       },
       maxWidth: {
