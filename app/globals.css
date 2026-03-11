@@ -70,3 +70,84 @@ code {
 :not(pre) > code {
   @apply rounded bg-muted px-1.5 py-0.5;
 }
+
+/* Apple Intelligence 风格霓虹流光边框 - 柔和版 */
+@property --neon-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.neon-border-wrapper {
+  --neon-angle: 0deg;
+  position: relative;
+  padding: 3px;
+  border-radius: 12px;
+  background: conic-gradient(
+    from var(--neon-angle),
+    #ff6b6b,
+    #4ecdc4,
+    #45b7d1,
+    #96ceb4,
+    #ff6b6b
+  );
+  animation: neon-spin 5s linear infinite;
+  box-shadow: 0 0 20px rgba(78, 205, 196, 0.12), 0 0 40px rgba(69, 183, 209, 0.08);
+}
+
+/* 亮色模式：更柔和 */
+.neon-border-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 16px;
+  background: conic-gradient(
+    from var(--neon-angle),
+    #ff6b6b,
+    #4ecdc4,
+    #45b7d1,
+    #96ceb4,
+    #ff6b6b
+  );
+  filter: blur(14px);
+  opacity: 0.2;
+  z-index: -1;
+  animation: neon-spin 5s linear infinite;
+}
+
+/* 暗色模式：霓虹稍明显但不刺眼 */
+.dark .neon-border-wrapper {
+  box-shadow: 0 0 24px rgba(78, 205, 196, 0.18), 0 0 48px rgba(69, 183, 209, 0.1);
+}
+
+.dark .neon-border-wrapper::before {
+  opacity: 0.28;
+}
+
+.neon-textarea {
+  display: block;
+  border-radius: 10px;
+  min-height: 120px;
+}
+
+/* 响应式：移动端加大触控区域 */
+@media (max-width: 640px) {
+  .neon-textarea {
+    min-height: 140px;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+}
+
+.neon-textarea:focus {
+  box-shadow: 0 0 0 1px transparent;
+}
+
+@keyframes neon-spin {
+  from {
+    --neon-angle: 0deg;
+  }
+  to {
+    --neon-angle: 360deg;
+  }
+}

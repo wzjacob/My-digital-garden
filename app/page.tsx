@@ -8,21 +8,24 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
-      <section className="mb-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+      <section className="mb-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl md:tracking-[-0.02em]">
           梓郡的Digital Garden
         </h1>
-        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-5 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed md:text-lg">
           静心耕耘，缓慢生长——感谢您光临小花园
         </p>
       </section>
 
       <CategoryGrid />
 
-      <MessageForm />
+      <section className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
+        <h2 className="text-2xl font-semibold mb-6 text-foreground tracking-tight">留言板</h2>
+        <MessageForm />
+      </section>
 
-      <section className="mt-16 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-        <h2 className="text-2xl font-semibold mb-8 text-foreground">最近更新</h2>
+      <section className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+        <h2 className="text-2xl font-semibold mb-8 text-foreground tracking-tight">最近更新</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <div key={post.slug} className="animate-in fade-in slide-in-from-bottom-4 duration-300">

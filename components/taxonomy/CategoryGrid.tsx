@@ -22,11 +22,11 @@ export function CategoryGrid() {
         >
           <Link
             href={`/category/${cat.slug}/`}
-            className="flex flex-col rounded-xl border border-border bg-card p-5 shadow-sm transition-all hover:border-zinc-300 hover:shadow-md dark:hover:border-zinc-600"
+            className="flex h-full flex-col rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 ease-out hover:border-zinc-300 hover:shadow-md hover:-translate-y-0.5 dark:hover:border-zinc-600"
           >
             <span className="text-2xl mb-2">{CATEGORY_ICONS[cat.slug] ?? "📄"}</span>
             <h3 className="font-semibold text-foreground">{cat.name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+            <p className="mt-1 min-h-[2.5rem] flex-1 text-sm text-muted-foreground line-clamp-2">
               {cat.description}
             </p>
             <span className="mt-3 text-xs text-muted-foreground">

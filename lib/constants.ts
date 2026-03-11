@@ -23,7 +23,7 @@ export const CATEGORIES = {
   hardware: {
     slug: "hardware",
     name: "机械与能源",
-    description: "",
+    description: "结构与动力、材料与工艺的探索",
     tags: [],
   },
   journey: {
