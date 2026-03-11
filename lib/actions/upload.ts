@@ -5,6 +5,15 @@ import { existsSync } from "fs";
 import path from "path";
 import matter from "gray-matter";
 import type { CategorySlug } from "@/lib/constants";
+import { isAdminAuthenticated } from "@/lib/auth";
+
+async function requireAdmin(): Promise<void> {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) return; // 未配置则不校验
+  if (!(await isAdminAuthenticated())) {
+    throw new Error("无权限执行此操作，请先登录管理后台");
+  }
+}
 
 const POSTS_DIR = path.join(process.cwd(), "content/posts");
 const PUBLIC_DIR = path.join(process.cwd(), "public");
@@ -34,6 +43,13 @@ function sanitizeFilename(name: string): string {
   return name.replace(/[<>:"/\\|?*]/g, "-");
 }
 
+/** 移除 undefined，避免 gray-matter / js-yaml 序列化时报错 */
+function sanitizeFrontmatter<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as Record<string, unknown>;
+}
+
 export type UploadResult = {
   ok: boolean;
   message: string;
@@ -57,6 +73,7 @@ export async function uploadArticleSimple(
   category: CategorySlug
 ): Promise<UploadResult> {
   try {
+    await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { ok: false, message: "未选择文件" };
 
@@ -106,7 +123,7 @@ export async function uploadArticleSimple(
     }
 
     frontmatter.slug = finalSlug;
-    const output = matter.stringify(body, frontmatter);
+    const output = matter.stringify(body, sanitizeFrontmatter(frontmatter));
     await writeFile(fullPath, output, "utf-8");
     return { ok: true, message: "文章已保存", path: path.relative(process.cwd(), fullPath) };
   } catch (e) {
@@ -120,6 +137,7 @@ export async function uploadArticle(
   meta: ArticleFrontmatterForm
 ): Promise<UploadResult> {
   try {
+    await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { ok: false, message: "未选择文件" };
 
@@ -167,7 +185,7 @@ export async function uploadArticle(
     }
 
     frontmatter.slug = finalSlug;
-    const output = matter.stringify(body, frontmatter);
+    const output = matter.stringify(body, sanitizeFrontmatter(frontmatter));
 
     await writeFile(fullPath, output, "utf-8");
     const relativePath = path.relative(process.cwd(), fullPath);
@@ -180,6 +198,7 @@ export async function uploadArticle(
 
 export async function uploadMedia(formData: FormData): Promise<UploadResult> {
   try {
+    await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { ok: false, message: "未选择文件" };
 
@@ -227,6 +246,7 @@ export async function createLinkPost(
   description?: string
 ): Promise<UploadResult> {
   try {
+    await requireAdmin();
     if (!url?.trim()) return { ok: false, message: "请输入链接地址" };
     const href = url.startsWith("http") ? url : `https://${url}`;
 
@@ -260,7 +280,7 @@ export async function createLinkPost(
 ${description ? `\n${description}\n` : ""}
 `;
 
-    const output = matter.stringify(body, frontmatter);
+    const output = matter.stringify(body, sanitizeFrontmatter(frontmatter));
     const fileName = `${slug}.mdx`;
     const fullPath = path.join(dir, fileName);
 
@@ -287,6 +307,7 @@ export async function updateArticle(
   content: string
 ): Promise<UploadResult> {
   try {
+    await requireAdmin();
     const normalized = fileSlug.replace(/\\/g, "/").trim();
     const segments = normalized.split("/").filter(Boolean);
     const fullPath = path.join(POSTS_DIR, ...segments) + ".mdx";
@@ -312,7 +333,7 @@ export async function updateArticle(
       draft: meta.draft ?? false,
     };
 
-    const output = matter.stringify(content, frontmatter);
+    const output = matter.stringify(content, sanitizeFrontmatter(frontmatter));
 
     const dir = path.join(POSTS_DIR, meta.category);
     await mkdir(dir, { recursive: true });
@@ -340,6 +361,7 @@ export async function updateArticle(
 /** 删除文章 */
 export async function deleteArticle(fileSlug: string): Promise<UploadResult> {
   try {
+    await requireAdmin();
     const normalized = fileSlug.replace(/\\/g, "/").trim();
     const segments = normalized.split("/").filter(Boolean);
     const fullPath = path.join(POSTS_DIR, ...segments) + ".mdx";

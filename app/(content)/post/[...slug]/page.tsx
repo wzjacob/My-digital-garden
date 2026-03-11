@@ -7,6 +7,21 @@ import { MDXRenderer } from "@/components/mdx/MDXRenderer";
 import { formatDate } from "@/lib/utils";
 import { Breadcrumb } from "@/components/taxonomy/Breadcrumb";
 
+/** 允许访问未在构建时预生成的新文章路径 */
+export const dynamicParams = true;
+
+function decodeSlug(slug: string[]): string {
+  return slug
+    .map((s) => {
+      try {
+        return decodeURIComponent(s);
+      } catch {
+        return s;
+      }
+    })
+    .join("/");
+}
+
 export async function generateStaticParams() {
   const posts = getAllPosts();
   return posts.map((p) => ({ slug: p.slug.split("/") }));
@@ -18,7 +33,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string[] }>;
 }) {
   const { slug } = await params;
-  const fullSlug = slug.join("/");
+  const fullSlug = decodeSlug(slug);
   const post = getPostBySlug(fullSlug);
   if (!post) return {};
   return {
@@ -33,7 +48,7 @@ export default async function PostPage({
   params: Promise<{ slug: string[] }>;
 }) {
   const { slug } = await params;
-  const fullSlug = slug.join("/");
+  const fullSlug = decodeSlug(slug);
   const post = getPostBySlug(fullSlug);
 
   if (!post) notFound();

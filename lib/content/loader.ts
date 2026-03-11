@@ -42,14 +42,17 @@ export function getAllPostSlugs(): string[] {
 }
 
 export function getPostBySlug(slug: string): Post | null {
-  const segments = slug.replace(/\\/g, "/").split("/").filter(Boolean);
+  const normalizedSlug = slug.replace(/\\/g, "/").trim();
+  const segments = normalizedSlug.split("/").filter(Boolean);
   const fullPath = path.join(POSTS_DIR, ...segments) + ".mdx";
   if (fs.existsSync(fullPath)) {
-    const post = loadPostFromFile(slug, fullPath);
-    if (post && post.slug === slug) return post;
+    const post = loadPostFromFile(normalizedSlug, fullPath);
+    if (post) return post;
   }
   const all = getAllPosts();
-  return all.find((p) => p.slug === slug) ?? null;
+  return (
+    all.find((p) => p.slug === normalizedSlug || p.slug === slug) ?? null
+  );
 }
 
 function loadPostFromFile(fileSlug: string, fullPath: string, includeDrafts = false): Post | null {
