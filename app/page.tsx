@@ -13,7 +13,7 @@ export default function HomePage() {
           梓郡的Digital Garden
         </h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          静心耕耘，缓慢生长。数字化、本草、玄学、硬核理工与行路思考的汇集之地。感谢你的光临。
+          静心耕耘，缓慢生长——感谢您光临小花园
         </p>
       </section>
 

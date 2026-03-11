@@ -25,7 +25,7 @@ export function Footer() {
               {SITE_NAME}
             </Link>
             <p className="mt-2 text-sm text-muted-foreground">
-              Digital Garden · 静心耕耘，缓慢生长
+              静心耕耘，缓慢生长——感谢您光临小花园
             </p>
             <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
               <a

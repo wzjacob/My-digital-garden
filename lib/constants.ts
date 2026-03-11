@@ -4,8 +4,8 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com
 export const CATEGORIES = {
   digital: {
     slug: "digital",
-    name: "数字化与工程管理",
-    description: "集团级信息化建设、RPA、主数据管理",
+    name: "IT生涯",
+    description: "IT职场小白的行路自述",
     tags: ["RPA", "MDM", "主数据", "信息化架构"],
   },
   herb: {
@@ -16,15 +16,15 @@ export const CATEGORIES = {
   },
   metaphysics: {
     slug: "metaphysics",
-    name: "玄学与哲学",
-    description: "八字排盘、面相分析、宏观规律",
+    name: "中国传统文化与哲学",
+    description: '"君子食无求饱，居无求安，敏于事而慎于言。"苦行僧自述',
     tags: ["八字", "面相", "宏观规律"],
   },
   hardware: {
     slug: "hardware",
-    name: "硬核理工与机械",
-    description: "消费电子、房车、柴火炉、芯片规格",
-    tags: ["消费电子", "房车", "柴火炉", "芯片规格"],
+    name: "机械与能源",
+    description: "",
+    tags: [],
   },
   journey: {
     slug: "journey",
