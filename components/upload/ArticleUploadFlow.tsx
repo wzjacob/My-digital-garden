@@ -49,6 +49,7 @@ export function ArticleUploadFlow({
 }) {
   const [step, setStep] = useState<"drop" | "form">("drop");
   const [file, setFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -64,17 +65,25 @@ export function ArticleUploadFlow({
 
   const handleFileSelected = useCallback(
     async (files: FileList | null) => {
-      if (!files?.[0]) return;
-      const f = files[0];
-      const name = f.name.toLowerCase();
-      if (!name.endsWith(".md") && !name.endsWith(".mdx")) {
-        setMessage({ type: "err", text: "仅支持 .md / .mdx 文件" });
+      if (!files?.length) return;
+      const arr = Array.from(files);
+      const mdFile = arr.find((f) => {
+        const n = f.name.toLowerCase();
+        return n.endsWith(".md") || n.endsWith(".mdx");
+      });
+      const imgs = arr.filter((f) => {
+        const n = f.name.toLowerCase();
+        return /\.(png|jpg|jpeg|gif|webp|svg)$/.test(n);
+      });
+      if (!mdFile) {
+        setMessage({ type: "err", text: "请选择 .md / .mdx 文章文件" });
         return;
       }
       setMessage(null);
-      setFile(f);
+      setFile(mdFile);
+      setImageFiles(imgs);
       try {
-        const text = await f.text();
+        const text = await mdFile.text();
         const { data } = parseFrontmatter(text);
         const d = data;
         const cat = ["digital", "herb", "metaphysics", "hardware", "journey"].includes(
@@ -82,7 +91,7 @@ export function ArticleUploadFlow({
         )
           ? (d.category as CategorySlug)
           : selectedCategory;
-        const title = String(d?.title ?? "").trim() || slugify(f.name.replace(/\.[^.]+$/, ""));
+        const title = String(d?.title ?? "").trim() || slugify(mdFile.name.replace(/\.[^.]+$/, ""));
         const slugVal = String(d?.slug ?? "").trim() || slugify(title);
         setMeta({
           title,
@@ -97,8 +106,8 @@ export function ArticleUploadFlow({
       } catch {
         setMeta((m) => ({
           ...m,
-          title: slugify(f.name.replace(/\.[^.]+$/, "")),
-          slug: slugify(f.name.replace(/\.[^.]+$/, "")),
+          title: slugify(mdFile.name.replace(/\.[^.]+$/, "")),
+          slug: slugify(mdFile.name.replace(/\.[^.]+$/, "")),
           category: selectedCategory,
           date: new Date().toISOString().slice(0, 10),
         }));
@@ -129,10 +138,12 @@ export function ArticleUploadFlow({
     setMessage(null);
     const formData = new FormData();
     formData.set("file", file);
+    imageFiles.forEach((img) => formData.append("images", img));
     const result = await uploadArticle(formData, meta);
     setMessage({ type: result.ok ? "ok" : "err", text: result.message });
     if (result.ok) {
       setFile(null);
+      setImageFiles([]);
       setStep("drop");
       setMeta({
         title: "",
@@ -151,10 +162,21 @@ export function ArticleUploadFlow({
     setMeta((m) => ({ ...m, slug: slugify(m.title) || "untitled" }));
   };
 
+  const addMoreImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fl = e.target.files;
+    if (fl?.length) setImageFiles((prev) => [...prev, ...Array.from(fl)]);
+    e.target.value = "";
+  };
+
   if (step === "form" && file) {
     return (
       <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
-        <p className="text-sm text-muted-foreground">已选择: {file.name}</p>
+        <p className="text-sm text-muted-foreground">已选择文章: {file.name}</p>
+        {imageFiles.length > 0 && (
+          <p className="text-sm text-green-600 dark:text-green-400">
+            已选 {imageFiles.length} 张图片，将自动替换文章中的本地路径
+          </p>
+        )}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">标题 *</label>
           <input
@@ -216,6 +238,23 @@ export function ArticleUploadFlow({
             className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="block text-sm font-medium text-foreground w-full">
+            文章内嵌图片（如有本地路径 C:\\... 请同时选择对应图片）
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={addMoreImages}
+            className="text-sm file:mr-2 file:py-1.5 file:px-3 file:rounded file:border file:border-input file:bg-muted"
+          />
+          {imageFiles.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {imageFiles.map((f) => f.name).join(", ")}
+            </span>
+          )}
+        </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">标签（逗号分隔）</label>
           <input
@@ -239,7 +278,7 @@ export function ArticleUploadFlow({
           </label>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="ghost" onClick={() => { setStep("drop"); setFile(null); }}>
+          <Button type="button" variant="ghost" onClick={() => { setStep("drop"); setFile(null); setImageFiles([]); }}>
             取消
           </Button>
           <Button type="submit" disabled={loading}>
@@ -268,14 +307,15 @@ export function ArticleUploadFlow({
     >
       <input
         type="file"
-        accept=".md,.mdx"
+        accept=".md,.mdx,image/*"
+        multiple
         onChange={onInputChange}
         className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
       />
       <div className="flex flex-col items-center justify-center gap-3 py-10 px-6">
         <FileText className="h-12 w-12 text-muted-foreground" />
         <p className="text-sm text-muted-foreground text-center">选择 .md / .mdx 文件，填写 YAML 元数据后保存</p>
-        <p className="text-xs text-muted-foreground/70">支持 Typora 导出的文件 · 将自动预填 frontmatter</p>
+        <p className="text-xs text-muted-foreground/70">支持 Typora 导出 · 可同时选择文章和图片，自动替换本地路径</p>
       </div>
     </div>
   );

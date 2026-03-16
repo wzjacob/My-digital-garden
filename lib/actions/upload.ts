@@ -40,6 +40,70 @@ function sanitizeFrontmatter<T extends Record<string, unknown>>(obj: T): Record<
   ) as Record<string, unknown>;
 }
 
+/** 判断是否为需要替换的本地路径（Windows/Mac 绝对路径、file://） */
+function isLocalImagePath(src: string): boolean {
+  if (!src?.trim()) return false;
+  const s = src.trim();
+  if (/^https?:\/\//i.test(s)) return false;
+  if (/^\//.test(s) && s.startsWith("/media/")) return false;
+  return /[:\\]/.test(s) || /^file:\/\//i.test(s) || /^\/Users\//.test(s);
+}
+
+/** 从 Markdown 内容中提取图片的 src，返回 [{alt, src, full}] */
+function extractImageRefs(content: string): { alt: string; src: string; full: string }[] {
+  const re = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  const out: { alt: string; src: string; full: string }[] = [];
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    out.push({ alt: m[1], src: m[2].trim(), full: m[0] });
+  }
+  return out;
+}
+
+/** 将内容中的本地图片路径替换为上传后的 Web URL */
+async function rewriteLocalImages(
+  content: string,
+  imageFiles: File[]
+): Promise<{ content: string; pathMap: Record<string, string> }> {
+  const pathMap: Record<string, string> = {};
+  const byBasename = new Map<string, File>();
+  for (const f of imageFiles) {
+    const base = path.basename(f.name);
+    if (!byBasename.has(base)) byBasename.set(base, f);
+  }
+
+  const refs = extractImageRefs(content);
+  let result = content;
+
+  for (const ref of refs) {
+    if (!isLocalImagePath(ref.src)) continue;
+    const base = path.basename(ref.src.replace(/\\/g, "/"));
+    const file = byBasename.get(base);
+    if (!file) continue;
+
+    const yearMonth = new Date().toISOString().slice(0, 7);
+    const dir = path.join(PUBLIC_DIR, MEDIA_DIR, yearMonth);
+    await mkdir(dir, { recursive: true });
+    const ext = path.extname(file.name).toLowerCase();
+    const safeName = path.basename(file.name, ext).replace(/[<>:"/\\|?*]/g, "-") + ext;
+    let fullPath = path.join(dir, safeName);
+    let counter = 0;
+    while (existsSync(fullPath)) {
+      counter++;
+      fullPath = path.join(dir, `${path.basename(safeName, ext)}-${counter}${ext}`);
+    }
+    const bytes = await file.arrayBuffer();
+    await writeFile(fullPath, Buffer.from(bytes));
+    const url = `/${path.relative(PUBLIC_DIR, fullPath).replace(/\\/g, "/")}`;
+    pathMap[ref.src] = url;
+  }
+
+  for (const [oldPath, url] of Object.entries(pathMap)) {
+    result = result.split(oldPath).join(url);
+  }
+  return { content: result, pathMap };
+}
+
 export type UploadResult = {
   ok: boolean;
   message: string;
@@ -72,8 +136,14 @@ export async function uploadArticleSimple(
     }
 
     const bytes = await file.arrayBuffer();
-    const content = Buffer.from(bytes).toString("utf-8");
-    const { data, content: body } = matter(content);
+    const raw = Buffer.from(bytes).toString("utf-8");
+    const { data, content: bodyRaw } = matter(raw);
+    let body = bodyRaw;
+    const imageFiles = (formData.getAll("images") as File[]).filter((f) => f && f.size > 0);
+    if (imageFiles.length > 0) {
+      const { content: rewritten } = await rewriteLocalImages(body, imageFiles);
+      body = rewritten;
+    }
 
     const cat = getCategoryFromFrontmatter(data as Record<string, unknown>) ?? category;
     const titleFromFile = (data?.title as string)?.trim();
@@ -135,8 +205,14 @@ export async function uploadArticle(
     }
 
     const bytes = await file.arrayBuffer();
-    const content = Buffer.from(bytes).toString("utf-8");
-    const { data, content: body } = matter(content);
+    const raw = Buffer.from(bytes).toString("utf-8");
+    const { data, content: bodyRaw } = matter(raw);
+    let body = bodyRaw;
+    const imageFiles = (formData.getAll("images") as File[]).filter((f) => f && f.size > 0);
+    if (imageFiles.length > 0) {
+      const { content: rewritten } = await rewriteLocalImages(body, imageFiles);
+      body = rewritten;
+    }
 
     const category = meta.category;
     const slugVal = meta.slug?.trim() || slugify(meta.title || file.name);
@@ -340,6 +416,24 @@ export async function updateArticle(
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { ok: false, message: `更新失败: ${msg}` };
+  }
+}
+
+/** 上传图片并替换内容中的本地路径（用于编辑时修复图片） */
+export async function replaceLocalImagesWithUpload(
+  content: string,
+  formData: FormData
+): Promise<{ ok: boolean; message: string; content?: string }> {
+  try {
+    const imageFiles = (formData.getAll("images") as File[]).filter((f) => f && f.size > 0);
+    if (imageFiles.length === 0) {
+      return { ok: false, message: "请选择要上传的图片" };
+    }
+    const { content: rewritten } = await rewriteLocalImages(content, imageFiles);
+    return { ok: true, message: "图片已替换", content: rewritten };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, message: `替换失败: ${msg}` };
   }
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { updateArticle, type ArticleFrontmatterForm } from "@/lib/actions/upload";
+import { updateArticle, replaceLocalImagesWithUpload, type ArticleFrontmatterForm } from "@/lib/actions/upload";
 import type { Post } from "@/lib/content/types";
 import type { CategorySlug } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,21 @@ export function EditForm({
     draft: post.draft ?? false,
   });
   const [content, setContent] = useState(post.content);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const hasLocalPaths = /!\[([^\]]*)\]\([^)]*[:\\]/.test(content);
+
+  const handleReplaceImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const fd = new FormData();
+    Array.from(files).forEach((f) => fd.append("images", f));
+    const res = await replaceLocalImagesWithUpload(content, fd);
+    if (res.ok && res.content) {
+      setContent(res.content);
+    }
+    e.target.value = "";
+  };
 
   const syncSlugFromTitle = () => {
     setMeta((m) => ({ ...m, slug: slugify(m.title) || "untitled" }));
@@ -145,6 +160,29 @@ export function EditForm({
           草稿（不在列表中显示）
         </label>
       </div>
+      {hasLocalPaths && (
+        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
+            检测到本地图片路径（如 C:\\...），请上传对应图片并自动替换：
+          </p>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleReplaceImages}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => imageInputRef.current?.click()}
+          >
+            上传图片并替换本地路径
+          </Button>
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">正文内容 *</label>
         <textarea
