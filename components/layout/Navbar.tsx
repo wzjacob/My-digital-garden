@@ -26,7 +26,6 @@ const NAV_ITEMS: { href: string; label: string }[] = [
 ];
 const UPLOAD_HREF = "/upload";
 const MANAGE_HREF = "/manage";
-const SHOW_ADMIN = process.env.NEXT_PUBLIC_SHOW_ADMIN === "true";
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -80,34 +79,30 @@ function MobileNav() {
           <SheetTitle>{SITE_NAME}</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-1 mt-8">
-          {SHOW_ADMIN && (
-            <>
-              <Link
-                href={UPLOAD_HREF}
-                className={cn(
-                  "px-4 py-3 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
-                  pathname === UPLOAD_HREF
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                )}
-              >
-                <Upload className="h-4 w-4" />
-                上传
-              </Link>
-              <Link
-                href={MANAGE_HREF}
-                className={cn(
-                  "px-4 py-3 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
-                  pathname === MANAGE_HREF || pathname.startsWith("/manage")
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                )}
-              >
-                <Settings className="h-4 w-4" />
-                管理
-              </Link>
-            </>
-          )}
+          <Link
+            href={UPLOAD_HREF}
+            className={cn(
+              "px-4 py-3 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
+              pathname === UPLOAD_HREF
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            )}
+          >
+            <Upload className="h-4 w-4" />
+            上传
+          </Link>
+          <Link
+            href={MANAGE_HREF}
+            className={cn(
+              "px-4 py-3 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
+              pathname === MANAGE_HREF || pathname.startsWith("/manage")
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            管理
+          </Link>
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
@@ -139,34 +134,30 @@ export function Navbar() {
         </Link>
         <div className="flex items-center gap-2">
           <DesktopNav />
-          {SHOW_ADMIN && (
-            <>
-              <Link
-                href={UPLOAD_HREF}
-                className={cn(
-                  "hidden md:flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  pathname === UPLOAD_HREF
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                )}
-              >
-                <Upload className="h-4 w-4" />
-                上传
-              </Link>
-              <Link
-                href={MANAGE_HREF}
-                className={cn(
-                  "hidden md:flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  pathname === MANAGE_HREF || pathname.startsWith("/manage")
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                )}
-              >
-                <Settings className="h-4 w-4" />
-                管理
-              </Link>
-            </>
-          )}
+          <Link
+            href={UPLOAD_HREF}
+            className={cn(
+              "hidden md:flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+              pathname === UPLOAD_HREF
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            )}
+          >
+            <Upload className="h-4 w-4" />
+            上传
+          </Link>
+          <Link
+            href={MANAGE_HREF}
+            className={cn(
+              "hidden md:flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+              pathname === MANAGE_HREF || pathname.startsWith("/manage")
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            管理
+          </Link>
           <ThemeToggle />
           <MobileNav />
         </div>

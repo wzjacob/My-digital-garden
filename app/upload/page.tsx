@@ -1,6 +1,5 @@
 import { UploadPageClient } from "./UploadPageClient";
 import { CATEGORIES } from "@/lib/constants";
-import { LogoutButton } from "@/components/admin/LogoutButton";
 
 export const metadata = {
   title: "上传内容",
@@ -17,7 +16,6 @@ export default function UploadPage() {
             支持 Typora 导出的 .md/.mdx，以及图片、视频和链接收藏
           </p>
         </div>
-        <LogoutButton />
       </header>
 
       <UploadPageClient categories={CATEGORIES} />

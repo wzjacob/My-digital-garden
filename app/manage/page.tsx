@@ -1,7 +1,6 @@
 import { getAllPostsIncludingDrafts } from "@/lib/content/loader";
 import { ManageClient } from "./ManageClient";
 import { CATEGORIES } from "@/lib/constants";
-import { LogoutButton } from "@/components/admin/LogoutButton";
 
 export const metadata = {
   title: "内容管理",
@@ -20,7 +19,6 @@ export default function ManagePage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">内容管理</h1>
           <p className="mt-2 text-muted-foreground">上传、编辑、删除文章，一站式在线管理</p>
         </div>
-        <LogoutButton />
       </header>
 
       <ManageClient posts={posts} categories={CATEGORIES} />

@@ -5,16 +5,6 @@ import { existsSync } from "fs";
 import path from "path";
 import matter from "gray-matter";
 import type { CategorySlug } from "@/lib/constants";
-import { isAdminAuthenticated } from "@/lib/auth";
-
-async function requireAdmin(): Promise<void> {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return; // 未配置则不校验
-  if (!(await isAdminAuthenticated())) {
-    throw new Error("无权限执行此操作，请先登录管理后台");
-  }
-}
-
 const POSTS_DIR = path.join(process.cwd(), "content/posts");
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 const MEDIA_DIR = "media";
@@ -73,7 +63,6 @@ export async function uploadArticleSimple(
   category: CategorySlug
 ): Promise<UploadResult> {
   try {
-    await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { ok: false, message: "未选择文件" };
 
@@ -137,7 +126,6 @@ export async function uploadArticle(
   meta: ArticleFrontmatterForm
 ): Promise<UploadResult> {
   try {
-    await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { ok: false, message: "未选择文件" };
 
@@ -198,7 +186,6 @@ export async function uploadArticle(
 
 export async function uploadMedia(formData: FormData): Promise<UploadResult> {
   try {
-    await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { ok: false, message: "未选择文件" };
 
@@ -246,7 +233,6 @@ export async function createLinkPost(
   description?: string
 ): Promise<UploadResult> {
   try {
-    await requireAdmin();
     if (!url?.trim()) return { ok: false, message: "请输入链接地址" };
     const href = url.startsWith("http") ? url : `https://${url}`;
 
@@ -307,7 +293,6 @@ export async function updateArticle(
   content: string
 ): Promise<UploadResult> {
   try {
-    await requireAdmin();
     const normalized = fileSlug.replace(/\\/g, "/").trim();
     const segments = normalized.split("/").filter(Boolean);
     const fullPath = path.join(POSTS_DIR, ...segments) + ".mdx";
@@ -361,7 +346,6 @@ export async function updateArticle(
 /** 删除文章 */
 export async function deleteArticle(fileSlug: string): Promise<UploadResult> {
   try {
-    await requireAdmin();
     const normalized = fileSlug.replace(/\\/g, "/").trim();
     const segments = normalized.split("/").filter(Boolean);
     const fullPath = path.join(POSTS_DIR, ...segments) + ".mdx";
