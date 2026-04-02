@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadArticle, type ArticleFrontmatterForm } from "@/lib/actions/upload";
 import type { CategorySlug } from "@/lib/constants";
-import { FileText } from "lucide-react";
+import { FileText, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Categories = typeof import("@/lib/constants").CATEGORIES;
@@ -52,6 +52,8 @@ export function ArticleUploadFlow({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const articleFileInputRef = useRef<HTMLInputElement>(null);
+  const extraImagesInputRef = useRef<HTMLInputElement>(null);
 
   const [meta, setMeta] = useState<ArticleFrontmatterForm>({
     title: "",
@@ -140,7 +142,11 @@ export function ArticleUploadFlow({
     formData.set("file", file);
     imageFiles.forEach((img) => formData.append("images", img));
     const result = await uploadArticle(formData, meta);
-    setMessage({ type: result.ok ? "ok" : "err", text: result.message });
+    const okNote =
+      result.ok && result.path
+        ? `${result.message} 可在「管理」中继续编辑或前往 /post/ 查看。`
+        : result.message;
+    setMessage({ type: result.ok ? "ok" : "err", text: okNote });
     if (result.ok) {
       setFile(null);
       setImageFiles([]);
@@ -238,22 +244,43 @@ export function ArticleUploadFlow({
             className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="block text-sm font-medium text-foreground w-full">
-            文章内嵌图片（如有本地路径 C:\\... 请同时选择对应图片）
-          </label>
+        <div className="rounded-lg border border-border bg-background/50 p-3 space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            配图（Typora 里的本地路径 C:\…）
+          </p>
+          <p className="text-xs text-muted-foreground">
+            先选 .md 后，点下面按钮选择图片（可多选），上传时会按文件名自动替换正文里的本地路径。
+          </p>
           <input
+            ref={extraImagesInputRef}
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
             multiple
             onChange={addMoreImages}
-            className="text-sm file:mr-2 file:py-1.5 file:px-3 file:rounded file:border file:border-input file:bg-muted"
+            className="sr-only"
+            id="article-extra-images"
           />
-          {imageFiles.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {imageFiles.map((f) => f.name).join(", ")}
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="border border-input"
+              onClick={() => extraImagesInputRef.current?.click()}
+            >
+              <ImagePlus className="h-4 w-4 mr-1.5" />
+              选择配图文件
+            </Button>
+            {imageFiles.length > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                已选 {imageFiles.length} 个：{imageFiles.map((f) => f.name).join(", ")}
+              </span>
+            ) : (
+              <span className="text-xs text-amber-600/90 dark:text-amber-500/90">
+                未选配图 — 若文章里没有本地图片路径可跳过
+              </span>
+            )}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">标签（逗号分隔）</label>
@@ -300,22 +327,34 @@ export function ArticleUploadFlow({
   }
 
   return (
-    <div
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      className="relative rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-foreground/30 transition-all"
-    >
-      <input
-        type="file"
-        accept=".md,.mdx,image/*"
-        multiple
-        onChange={onInputChange}
-        className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
-      />
-      <div className="flex flex-col items-center justify-center gap-3 py-10 px-6">
-        <FileText className="h-12 w-12 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground text-center">选择 .md / .mdx 文件，填写 YAML 元数据后保存</p>
-        <p className="text-xs text-muted-foreground/70">支持 Typora 导出 · 可同时选择文章和图片，自动替换本地路径</p>
+    <div className="space-y-3">
+      <div
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        className="relative rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-foreground/30 transition-all overflow-hidden"
+      >
+        <input
+          ref={articleFileInputRef}
+          type="file"
+          accept=".md,.mdx,image/*"
+          multiple
+          onChange={onInputChange}
+          className="absolute inset-0 w-full h-full cursor-pointer opacity-0 z-10"
+          aria-label="选择文章与配图"
+        />
+        <div className="flex flex-col items-center justify-center gap-3 py-10 px-6 pointer-events-none">
+          <FileText className="h-12 w-12 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground text-center">拖拽到此处，或点击下方按钮选择文件</p>
+          <p className="text-xs text-muted-foreground/70 text-center max-w-md">
+            可同时选 .md/.mdx 与多张图片；仅文章时也可先选 md，下一步再点「选择配图文件」
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-center">
+        <Button type="button" variant="ghost" size="sm" className="border border-dashed border-muted-foreground/40" onClick={() => articleFileInputRef.current?.click()}>
+          <FileText className="h-4 w-4 mr-2" />
+          打开文件选择器（若拖拽无反应请点此）
+        </Button>
       </div>
     </div>
   );

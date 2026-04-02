@@ -89,7 +89,17 @@ export function UploadPageClient({ categories }: { categories: Categories }) {
 
       {/* 文章上传 */}
       {activeTab === "article" && (
-        <ArticleUploadFlow categories={categories} category={category} />
+        <>
+          <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">推荐流程</p>
+            <ol className="list-decimal list-inside space-y-1 text-xs sm:text-sm">
+              <li>在 Typora / VS Code 写好 .md，图片可先用本地路径；</li>
+              <li>上传页选好<strong>分类</strong>后，拖拽 <code className="bg-muted px-1 rounded">.md</code>，并一同拖入图片，或下一步点「选择配图文件」；</li>
+              <li>确认元数据后保存；需要补图可到「管理 → 编辑」用「上传图片并替换本地路径」。</li>
+            </ol>
+          </div>
+          <ArticleUploadFlow categories={categories} category={category} />
+        </>
       )}
 
       {/* 媒体上传 */}
@@ -157,7 +167,7 @@ export function UploadPageClient({ categories }: { categories: Categories }) {
       )}
 
       <p className="text-xs text-muted-foreground text-center">
-        💡 上传文章时可手动填写 YAML 元数据（标题、slug、分类等），避免 404；媒体保存到 <code className="bg-muted px-1 rounded">public/media/年月/</code>，可用 <code className="bg-muted px-1 rounded">/media/2025-02/xxx.png</code> 引用。
+        💡 文章内引用图片请使用 <code className="bg-muted px-1 rounded">/media/年-月/文件名.png</code>（相对站点根路径）；单独上传媒体用「图片/视频」页。
       </p>
     </div>
   );
